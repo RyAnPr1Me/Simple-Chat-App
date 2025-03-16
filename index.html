@@ -135,7 +135,14 @@
       <button id="sendBtn">Send</button>
     </div>
   </div>
+
   <script>
+    // Hardcoded Pusher credentials
+    const pusherAppId = '1958651';
+    const pusherKey = 'df5bb9092afe8e53d9b4';
+    const pusherSecret = '7f144a3663d71df28611';
+    const pusherCluster = 'us2';
+    
     let username = null;
     const loginModal = document.getElementById("loginModal");
     const loginUsernameInput = document.getElementById("loginUsername");
@@ -145,28 +152,65 @@
     const messageArea = document.getElementById("messageArea");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+
+    // Initialize Pusher
+    const pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster
+    });
+
+    // Subscribe to 'global-chat' channel
+    const channel = pusher.subscribe('global-chat');
+    channel.bind('chat-message', function(data) {
+      displayMessage(data.username, data.message, "received");
+    });
+
+    // Login function
     function login() {
       const enteredUsername = loginUsernameInput.value.trim();
-      if (!enteredUsername) return;
+      if (!enteredUsername) return alert('Please enter a valid username!');
       username = enteredUsername;
       usernameDisplay.textContent = "Logged in as: " + username;
       loginModal.style.display = "none";
       chatApp.style.display = "flex";
     }
+
     loginButton.addEventListener("click", login);
     loginUsernameInput.addEventListener("keyup", (event) => {
       if (event.key === "Enter") login();
     });
+
+    // Send message function
     function sendMessage() {
       const message = messageInput.value.trim();
-      if (!message || !username) return;
+      if (!message || !username) return alert('Please enter a message!');
       displayMessage(username, message, "sent");
-      messageInput.value = "";
+
+      // Encrypt message before sending
+      const encryptedMessage = CryptoJS.AES.encrypt(message, 'secret-key').toString();
+
+      // Send to Pusher
+      fetch('http://localhost:8080/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          message: encryptedMessage
+        })
+      }).then(response => response.json())
+        .then(data => console.log('Message sent:', data))
+        .catch(error => console.error('Error sending message:', error));
+
+      messageInput.value = '';
     }
+
     sendBtn.addEventListener("click", sendMessage);
     messageInput.addEventListener("keyup", (event) => {
       if (event.key === "Enter") sendMessage();
     });
+
+    // Display message in chat area
     function displayMessage(user, message, type) {
       const messageDiv = document.createElement("div");
       messageDiv.classList.add("message", type);
