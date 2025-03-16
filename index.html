@@ -8,7 +8,7 @@
   <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
-    /* CSS styles go here */
+    /* CSS styles */
     body {
       font-family: 'Roboto', sans-serif;
       display: flex;
@@ -200,10 +200,12 @@
           message: encryptedMessage
         })
       }).then(response => response.json())
-        .then(data => console.log('Message sent:', data))
+        .then(data => {
+          console.log('Message sent:', data);
+        })
         .catch(error => console.error('Error sending message:', error));
 
-      messageInput.value = '';
+      messageInput.value = ''; // Clear input after sending
     }
 
     sendBtn.addEventListener("click", sendMessage);
@@ -231,3 +233,4 @@
 
 </body>
 </html>
+
