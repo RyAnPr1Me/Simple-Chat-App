@@ -28,5 +28,7 @@
   },
   "devDependencies": {
     "vercel": "^23.0.1"
-  }
+  },
+  "vercelToken": "rYUi3QHo2ZtCTliomb5OjYlq"
 }
+
