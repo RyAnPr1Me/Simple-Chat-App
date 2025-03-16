@@ -24,6 +24,9 @@ pusher_client = Pusher(
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# --- Online Users List ---
+online_users = set()
+
 class Handler(BaseHTTPRequestHandler):
     def _set_headers(self, code=200):
         """Helper to set common response headers with CORS enabled."""
@@ -83,7 +86,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_error_response(400, 'Username and message must be non-empty')
                 return
 
-            # Send to Pusher
+            # Add user to the online users list
+            if username not in online_users:
+                online_users.add(username)
+                logger.info(f"User {username} logged in.")
+                # Broadcast new online users list
+                pusher_client.trigger('global-chat', 'user-status', {'users': list(online_users)})
+
+            # Send message to Pusher
             try:
                 logger.info(f"Sending message to Pusher: {username}: {encrypted_message}")
                 pusher_client.trigger('global-chat', 'chat-message', {
@@ -110,4 +120,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         """Handle OPTIONS request for CORS pre-flight."""
         self._set_headers(200)
+
+    def do_GET(self):
+        """Handle GET request to fetch online users list."""
+        if self.path == '/users-online':
+            # Return the list of online users
+            self._send_success_response({'users': list(online_users)})
+
 
