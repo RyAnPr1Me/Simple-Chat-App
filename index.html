@@ -235,6 +235,17 @@
       loginModal.style.display = "none";
       chatApp.style.display = "flex";
       updateUsersOnlineList();
+
+      // Notify backend about new user login
+      fetch('/update_user_status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username
+        })
+      });
     }
 
     loginButton.addEventListener("click", login);
@@ -252,7 +263,7 @@
       const encryptedMessage = CryptoJS.AES.encrypt(message, 'secret-key').toString();
 
       // Send to backend (backend.py)
-      fetch('http://localhost:8080/chat', {
+      fetch('/send_message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -273,18 +284,18 @@
       if (event.key === "Enter") sendMessage();
     });
 
-    // Display message in chat area
+    // Display message in the chat area
     function displayMessage(user, message, type) {
-      const messageDiv = document.createElement("div");
-      messageDiv.classList.add("message", type);
-      messageDiv.textContent = `${user}: ${message}`;
-      messageArea.appendChild(messageDiv);
+      const div = document.createElement("div");
+      div.classList.add("message", type);
+      div.textContent = `${user}: ${message}`;
+      messageArea.appendChild(div);
       messageArea.scrollTop = messageArea.scrollHeight;
     }
 
-    // Update users list in the sidebar
+    // Update list of online users
     function updateUsersOnline(users) {
-      userList.innerHTML = '';
+      userList.innerHTML = "";
       users.forEach(user => {
         const li = document.createElement("li");
         li.textContent = user;
@@ -292,12 +303,15 @@
       });
     }
 
-    // Fetch users online from backend
+    // Initial request to backend for users online
     function updateUsersOnlineList() {
-      fetch('http://localhost:8080/users-online')
-        .then(response => response.json())
-        .then(data => updateUsersOnline(data.users))
-        .catch(error => console.error('Error fetching online users:', error));
+      fetch('/update_user_status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      });
     }
   </script>
 </body>
