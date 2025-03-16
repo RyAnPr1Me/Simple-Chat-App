@@ -4,10 +4,10 @@
   "description": "A secure chat app with real-time messaging (Pusher) and client-side encryption, featuring a Python API endpoint.",
   "main": "index.html",
   "scripts": {
-    "dev": "vercel dev",
-    "start": "vercel dev",
-    "build": "vercel build",
-    "deploy": "vercel deploy"
+    "dev": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
+    "start": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
+    "build": "vercel build --token rYUi3QHo2ZtCTliomb5OjYlq",
+    "deploy": "vercel deploy --token rYUi3QHo2ZtCTliomb5OjYlq"
   },
   "keywords": [
     "chat",
