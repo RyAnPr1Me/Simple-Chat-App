@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev",
-    "build": "vercel build",  // Add build script if necessary
-    "deploy": "vercel deploy" // Deploy command for Vercel
+    "build": "vercel build",
+    "deploy": "vercel deploy"
   },
   "keywords": [
     "chat",
@@ -18,15 +18,15 @@
     "vercel",
     "real-time"
   ],
-  "author": "Ryan Manzo",  // Replace with your name
+  "author": "Ryan Manzo",
   "license": "MIT",
   "dependencies": {
-    "pusher-js": "^7.0.3",  // Pusher JS for real-time messaging
-    "crypto-js": "^3.1.9-1", // CryptoJS for client-side encryption
-    "supabase-js": "^2.0.0",  // Supabase JS for interacting with Supabase database
-    "axios": "^0.21.1"  // Axios for making HTTP requests if needed (e.g., interacting with APIs)
+    "pusher-js": "^7.0.3",
+    "crypto-js": "^3.1.9-1",
+    "supabase-js": "^2.0.0",
+    "axios": "^0.21.1"
   },
   "devDependencies": {
-    "vercel": "^23.0.1"  // Vercel CLI for deployment and local development
+    "vercel": "^23.0.1"
   }
 }
