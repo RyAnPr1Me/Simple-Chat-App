@@ -4,6 +4,13 @@ from http.server import BaseHTTPRequestHandler
 from pusher import Pusher
 from pusher.errors import PusherBadRequest, PusherServerError
 from socket import timeout
+from flask import Flask, request, jsonify
+from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+
+# --- Load environment variables ---
+load_dotenv()
 
 # --- Pusher Credentials ---
 pusher_app_id = "1958651"
@@ -20,12 +27,75 @@ pusher_client = Pusher(
     ssl=True
 )
 
+# --- Supabase Credentials ---
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 # --- Setup logging ---
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # --- Online Users List ---
 online_users = set()
+
+# --- Flask Setup ---
+app = Flask(__name__)
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+
+    if not username:
+        return jsonify({"status": "error", "message": "Username is required"}), 400
+
+    # Check if the user exists in the database, if not add them
+    user = supabase.table("users").select("*").eq("username", username).single()
+    if not user:
+        supabase.table("users").insert({"username": username}).execute()
+
+    # Add user to the online_users set if not already in it
+    if username not in online_users:
+        online_users.add(username)
+        logger.info(f"User {username} logged in.")
+        pusher_client.trigger('global-chat', 'user-status', {'users': list(online_users)})
+
+    # Return list of online users
+    users_online = [user['username'] for user in supabase.table("users").select("username").execute().data]
+    return jsonify({"status": "success", "message": "User logged in", "users_online": users_online}), 200
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    username = data.get('username')
+    message = data.get('message')
+
+    if not username or not message:
+        return jsonify({"status": "error", "message": "Username and message are required"}), 400
+
+    # Store the message in the database
+    supabase.table("messages").insert({"username": username, "message": message}).execute()
+
+    # Send message to Pusher
+    try:
+        logger.info(f"Sending message to Pusher: {username}: {message}")
+        pusher_client.trigger('global-chat', 'chat-message', {
+            'username': username,
+            'message': message
+        })
+        logger.info(f"Message successfully sent to Pusher: {username}: {message}")
+    except (PusherBadRequest, PusherServerError) as e:
+        return jsonify({"status": "error", "message": "Pusher error occurred", "details": str(e)}), 500
+    except timeout as e:
+        return jsonify({"status": "error", "message": "Pusher request timeout", "details": str(e)}), 504
+
+    return jsonify({"status": "success", "message": "Message sent to Pusher"}), 200
+
+@app.route('/get_users', methods=['GET'])
+def get_users():
+    users_online = [user['username'] for user in supabase.table("users").select("username").execute().data]
+    return jsonify({"users_online": users_online}), 200
 
 class Handler(BaseHTTPRequestHandler):
     def _set_headers(self, code=200):
@@ -127,4 +197,6 @@ class Handler(BaseHTTPRequestHandler):
             # Return the list of online users
             self._send_success_response({'users': list(online_users)})
 
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=8080)
 
