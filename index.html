@@ -18,7 +18,6 @@
       background-color: #121212;
       color: #e0e0e0;
       display: flex;
-      flex-direction: column;
       height: 100vh;
     }
     #loginModal {
@@ -57,9 +56,14 @@
       cursor: pointer;
     }
     #chatApp {
-      display: none;
-      flex-direction: column;
+      display: flex;
+      width: 100%;
       height: 100%;
+    }
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      width: 75%;
     }
     .header {
       background-color: #1e88e5;
@@ -114,28 +118,26 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    #usersOnline {
+    .sidebar {
+      width: 25%;
+      background-color: #1e1e1e;
       padding: 16px;
-      background-color: #222;
-      color: #fff;
-      max-height: 200px;
       overflow-y: auto;
-      margin-top: 20px;
-      border-radius: 8px;
+      border-left: 1px solid #333;
     }
-    #usersOnline h3 {
-      margin: 0;
-      margin-bottom: 10px;
+    .sidebar h3 {
+      margin-bottom: 1rem;
+      font-size: 18px;
+      color: #fff;
     }
-    #usersOnline ul {
+    .user-list {
       list-style-type: none;
       padding: 0;
     }
-    #usersOnline li {
-      margin: 5px 0;
-      padding: 5px;
-      background-color: #333;
-      border-radius: 4px;
+    .user-list li {
+      padding: 8px 0;
+      color: #ccc;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -147,20 +149,21 @@
       <button id="loginButton">Login</button>
     </div>
   </div>
-
-  <div id="chatApp">
-    <div class="header">
-      <h1>Chat App</h1>
-      <div id="usernameDisplay"></div>
+  <div id="chatApp" style="display: none;">
+    <div class="chat-container">
+      <div class="header">
+        <h1>Chat App</h1>
+        <div id="usernameDisplay"></div>
+      </div>
+      <div id="messageArea" class="message-area"></div>
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Type message...">
+        <button id="sendBtn">Send</button>
+      </div>
     </div>
-    <div id="messageArea" class="message-area"></div>
-    <div class="input-area">
-      <input type="text" id="messageInput" placeholder="Type message...">
-      <button id="sendBtn">Send</button>
-    </div>
-    <div id="usersOnline">
+    <div class="sidebar">
       <h3>Users Online</h3>
-      <ul id="usersList"></ul>
+      <ul id="userList" class="user-list"></ul>
     </div>
   </div>
 
@@ -168,9 +171,8 @@
     // Hardcoded Pusher credentials
     const pusherAppId = '1958651';
     const pusherKey = 'df5bb9092afe8e53d9b4';
-    const pusherSecret = '7f144a3663d71df28611';
     const pusherCluster = 'us2';
-    
+
     let username = null;
     const loginModal = document.getElementById("loginModal");
     const loginUsernameInput = document.getElementById("loginUsername");
@@ -180,7 +182,7 @@
     const messageArea = document.getElementById("messageArea");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
-    const usersList = document.getElementById("usersList");
+    const userList = document.getElementById("userList");
 
     // Initialize Pusher
     const pusher = new Pusher(pusherKey, {
@@ -193,7 +195,6 @@
       displayMessage(data.username, data.message, "received");
     });
 
-    // Subscribe to 'user-status' channel to listen for online users
     channel.bind('user-status', function(data) {
       updateUsersOnline(data.users);
     });
@@ -206,12 +207,7 @@
       usernameDisplay.textContent = "Logged in as: " + username;
       loginModal.style.display = "none";
       chatApp.style.display = "flex";
-      
-      // Send the new user status to Pusher (broadcast to others)
-      channel.trigger('client-user-status', { 
-        username: username,
-        status: 'online'
-      });
+      updateUsersOnlineList();
     }
 
     loginButton.addEventListener("click", login);
@@ -228,7 +224,7 @@
       // Encrypt message before sending
       const encryptedMessage = CryptoJS.AES.encrypt(message, 'secret-key').toString();
 
-      // Send to Pusher
+      // Send to backend (backend.py)
       fetch('http://localhost:8080/chat', {
         method: 'POST',
         headers: {
@@ -259,14 +255,22 @@
       messageArea.scrollTop = messageArea.scrollHeight;
     }
 
-    // Update the list of users online
+    // Update users list in the sidebar
     function updateUsersOnline(users) {
-      usersList.innerHTML = '';
+      userList.innerHTML = '';
       users.forEach(user => {
-        const userItem = document.createElement("li");
-        userItem.textContent = user;
-        usersList.appendChild(userItem);
+        const li = document.createElement("li");
+        li.textContent = user;
+        userList.appendChild(li);
       });
+    }
+
+    // Fetch users online from backend
+    function updateUsersOnlineList() {
+      fetch('http://localhost:8080/users-online')
+        .then(response => response.json())
+        .then(data => updateUsersOnline(data.users))
+        .catch(error => console.error('Error fetching online users:', error));
     }
   </script>
 </body>
