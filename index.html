@@ -15,8 +15,8 @@
       font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #F1F3F4; /* Light gray for clean background */
-      color: #202124; /* Dark text for good readability */
+      background-color: #F1F3F4;
+      color: #202124;
       display: flex;
       height: 100vh;
       flex-direction: column;
@@ -46,7 +46,7 @@
       padding: 16px;
       margin: 1rem 0;
       border: 1px solid #ccc;
-      border-radius: 24px; /* More rounded inputs */
+      border-radius: 24px;
       font-size: 16px;
     }
     #loginModal input {
@@ -245,6 +245,8 @@
         body: JSON.stringify({
           username: username
         })
+      }).catch(error => {
+        console.error('Error updating user status:', error);
       });
     }
 
@@ -274,7 +276,9 @@
         })
       }).then(response => response.json())
         .then(data => console.log('Message sent:', data))
-        .catch(error => console.error('Error sending message:', error));
+        .catch(error => {
+          console.error('Error sending message:', error);
+        });
 
       messageInput.value = '';
     }
@@ -310,7 +314,11 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username: username })
+      }).then(response => {
+        console.log('Successfully updated users online list');
+      }).catch(error => {
+        console.error('Error updating users online list:', error);
       });
     }
   </script>
