@@ -1,4 +1,4 @@
-/* CSS styles */
+/* General styles */
 body {
   font-family: 'Roboto', sans-serif;
   display: flex;
@@ -6,9 +6,15 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
+  background-color: #e9ecef;
 }
 
+/* Login Modal */
 #loginModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,24 +23,53 @@ body {
   padding: 20px;
   background-color: white;
   border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
+/* Chat App Container */
 #chatApp {
   display: none;
-  flex-direction: column;
-  width: 50%;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 70%;
   height: 80vh;
   background-color: #f1f1f1;
   border-radius: 10px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
+/* Chat Container */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border-radius: 10px 10px 0 0;
+}
+
+/* Message Area */
 .message-area {
   flex-grow: 1;
-  padding: 20px;
+  padding: 15px;
   overflow-y: auto;
+  max-height: 60vh;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
 }
 
+/* Input Area */
 .input-area {
   display: flex;
   padding: 10px;
@@ -47,42 +82,65 @@ body {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 16px;
 }
 
 .input-area button {
   background-color: #007bff;
   color: white;
-  padding: 10px;
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
+  margin-left: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 
+.input-area button:hover {
+  background-color: #0056b3;
+}
+
+/* Sidebar */
 .sidebar {
-  width: 200px;
+  width: 250px;
   background-color: #fff;
   padding: 20px;
   box-shadow: 2px 0px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+  text-align: center;
 }
 
 .sidebar ul {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .sidebar ul li {
-  padding: 5px 0;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
 }
 
+/* Message Styling */
 .message {
   margin: 10px 0;
   padding: 10px;
   border-radius: 5px;
+  max-width: 80%;
+  word-wrap: break-word;
 }
 
 .sent {
   background-color: #d4f7d4;
+  align-self: flex-end;
 }
 
 .received {
   background-color: #f7f7f7;
+  align-self: flex-start;
 }
