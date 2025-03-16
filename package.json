@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
     "start": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
-    "build": "vercel build --token rYUi3QHo2ZtCTliomb5OjYlq",
+    "build": "echo 'No build step needed' && exit 0",
     "deploy": "vercel deploy --token rYUi3QHo2ZtCTliomb5OjYlq"
   },
   "keywords": [
@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "vercel": "^23.0.1"
-  },
-  "vercelToken": "rYUi3QHo2ZtCTliomb5OjYlq"
+  }
 }
 
