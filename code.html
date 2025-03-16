@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #chatContainer {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensure container can scroll */
+        }
+        #messageArea {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1em;
+            border-bottom: 1px solid #333;
+        }
+        #messageArea p {
+            margin: 0.5em 0;
+            padding: 0.5em;
+            border-radius: 8px;
+            background-color: #222;
+            word-wrap: break-word; /* Handle long words */
+        }
+       #inputArea {
+            display: flex;
+            padding: 1em;
+            border-top: 1px solid #333;
+            background-color: #1e1e1e;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 0.5em;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background-color: #333;
+            color: #fff;
+            margin-right: 0.5em;
+        }
+         #username {
+            padding: 0.5em;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background-color: #333;
+            color: #fff;
+            margin-right: 0.5em;
+        }
+
+        button {
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            border: none;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3e8e41;
+        }
+         #usernameDisplay {
+            padding: 0.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatContainer">
+        <div id="messageArea"></div>
+        <div id="inputArea">
+            <input type="text" id="username" placeholder="Enter username">
+            <input type="text" id="messageInput" placeholder="Type your message..." disabled>
+            <button onclick="sendMessage()" disabled id="sendBtn">Send</button>
+        </div>
+    </div>
+        <div id = "usernameDisplay"></div>
+
+
+    <script>
+        const messageInput = document.getElementById("messageInput");
+        const messageArea = document.getElementById("messageArea");
+        const usernameInput = document.getElementById("username");
+        const sendBtn = document.getElementById("sendBtn");
+        const usernameDisplay = document.getElementById("usernameDisplay");
+        let username = null;
+
+        // --- Pusher Setup ---
+        const pusher = new Pusher('df5bb9092afe8e53d9b4', {
+            cluster: 'us2',
+            encrypted: true
+        });
+        const channel = pusher.subscribe('global-chat');
+
+        channel.bind('chat-message', (data) => {
+          decryptMessage(data.message).then(decryptedMessage => {
+            displayMessage(`${data.username}: ${decryptedMessage}`);
+          });
+        });
+
+
+        usernameInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                setUsername();
+            }
+        });
+
+        // --- Encryption Key (!!! REPLACE THIS WITH SECURE KEY MANAGEMENT !!!) ---
+        const encryptionKey = "ThisIsAWeakKey123"; // MUST be 32 bytes for AES-256
+
+        // --- Encryption Functions ---
+        async function encryptMessage(message) {
+            const encrypted = CryptoJS.AES.encrypt(message, encryptionKey).toString();
+            return encrypted;
+        }
+
+        async function decryptMessage(encryptedMessage) {
+            const decrypted = CryptoJS.AES.decrypt(encryptedMessage, encryptionKey).toString(CryptoJS.enc.Utf8);
+            return decrypted;
+        }
+         function setUsername() {
+            const enteredUsername = usernameInput.value.trim();
+            if (enteredUsername) {
+                username = enteredUsername;
+                usernameInput.disabled = true;
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                usernameDisplay.textContent = "Logged as: " + username;
+
+            }
+        }
+
+        // --- Message Sending ---
+        async function sendMessage() {
+            const message = messageInput.value;
+            if (!message.trim() || !username) return;
+
+             const encryptedMessage = await encryptMessage(message);
+
+            fetch('/api/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, message: encryptedMessage }) // Send username
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Don't display *sent* message immediately (it's already encrypted)
+                messageInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                displayMessage(`Error: Could not send message. ${error.message}`);
+            });
+        }
+
+        // --- Display Message ---
+        function displayMessage(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            messageArea.appendChild(p);
+            messageArea.scrollTop = messageArea.scrollHeight; // Auto-scroll
+        }
+
+    </script>
+</body>
+</html>
