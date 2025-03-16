@@ -10,38 +10,37 @@ const sendBtn = document.getElementById("sendBtn");
 const userList = document.getElementById("userList");
 
 // Initialize Pusher
-const pusher = new Pusher('df5bb9092afe8e53d9b4', {
-  cluster: 'us2'
+const pusher = new Pusher("df5bb9092afe8e53d9b4", {
+  cluster: "us2",
+  forceTLS: true,
 });
 
-const channel = pusher.subscribe('global-chat');
+const channel = pusher.subscribe("global-chat");
 
-channel.bind('chat-message', function(data) {
-  displayMessage(data.username, data.message, "received");
+channel.bind("chat-message", (data) => {
+  const decryptedMessage = decryptMessage(data.message);
+  displayMessage(data.username, decryptedMessage, "received");
 });
 
-channel.bind('user-status', function(data) {
+channel.bind("user-status", (data) => {
   updateUsersOnline(data.users);
 });
 
 function login() {
   const enteredUsername = loginUsernameInput.value.trim();
-  if (!enteredUsername) return alert('Please enter a valid username!');
+  if (!enteredUsername) {
+    alert("Please enter a valid username!");
+    return;
+  }
+
   username = enteredUsername;
-  usernameDisplay.textContent = "Logged in as: " + username;
+  usernameDisplay.textContent = `Logged in as: ${username}`;
   loginModal.style.display = "none";
   chatApp.style.display = "flex";
 
-  // Notify backend about new user login
-  fetch('/update_user_status', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      username: username
-    })
-  }).catch(error => console.error('Error updating user status:', error));
+  notifyBackend("/update_user_status", { username }).catch((error) =>
+    console.error("Error updating user status:", error)
+  );
 }
 
 loginButton.addEventListener("click", login);
@@ -51,29 +50,20 @@ loginUsernameInput.addEventListener("keyup", (event) => {
 
 function sendMessage() {
   const message = messageInput.value.trim();
-  if (!message || !username) return alert('Please enter a message!');
+  if (!message) {
+    alert("Please enter a message!");
+    return;
+  }
+
   displayMessage(username, message, "sent");
 
-  // Encrypt message before sending
-  const encryptedMessage = CryptoJS.AES.encrypt(message, 'secret-key').toString();
+  const encryptedMessage = encryptMessage(message);
 
-  // Send to backend
-  fetch('/send_message', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      username: username,
-      message: encryptedMessage
-    })
-  }).then(response => response.json())
-    .then(data => {
-      console.log('Message sent:', data);
-    })
-    .catch(error => console.error('Error sending message:', error));
+  notifyBackend("/send_message", { username, message: encryptedMessage })
+    .then((data) => console.log("Message sent:", data))
+    .catch((error) => console.error("Error sending message:", error));
 
-  messageInput.value = ''; // Clear input after sending
+  messageInput.value = ""; // Clear input after sending
 }
 
 sendBtn.addEventListener("click", sendMessage);
@@ -91,9 +81,41 @@ function displayMessage(user, message, type) {
 
 function updateUsersOnline(users) {
   userList.innerHTML = "";
-  users.forEach(user => {
+  users.forEach((user) => {
     const li = document.createElement("li");
     li.textContent = user;
     userList.appendChild(li);
   });
 }
+
+function encryptMessage(message) {
+  return CryptoJS.AES.encrypt(message, "secret-key").toString();
+}
+
+function decryptMessage(encryptedMessage) {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedMessage, "secret-key");
+    return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
+  } catch (error) {
+    console.error("Error decrypting message:", error);
+    return "[Error]";
+  }
+}
+
+function notifyBackend(endpoint, data) {
+  return fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  }).then((response) => response.json());
+}
+
+// Auto-reconnect when Pusher disconnects
+pusher.connection.bind("disconnected", () => {
+  console.warn("Pusher disconnected! Attempting to reconnect...");
+  setTimeout(() => {
+    location.reload();
+  }, 3000);
+});
