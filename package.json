@@ -1,0 +1,22 @@
+{
+  "name": "secure-chat-app",
+  "version": "1.0.0",
+  "description": "A secure chat app with real-time messaging (Pusher) and client-side encryption, featuring a Python API endpoint.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "keywords": [
+    "chat",
+    "pusher",
+    "encryption",
+    "serverless",
+    "python",
+    "vercel"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
