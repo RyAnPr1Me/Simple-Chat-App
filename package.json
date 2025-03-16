@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
     "start": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
-    "build": "mkdir -p public && cp index.html public/index.html && cp style.css public/style.css && cp script.js public/script.js && echo 'Build completed'",
+    "build": "mkdir -p public && cp index.html public/index.html && if [ -f style.css ]; then cp style.css public/style.css; fi && if [ -f script.js ]; then cp script.js public/script.js; fi && echo 'Build completed'",
     "deploy": "vercel deploy --token rYUi3QHo2ZtCTliomb5OjYlq"
   },
   "keywords": [
