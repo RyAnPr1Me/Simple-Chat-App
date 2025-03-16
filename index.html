@@ -114,6 +114,29 @@
       border-radius: 4px;
       cursor: pointer;
     }
+    #usersOnline {
+      padding: 16px;
+      background-color: #222;
+      color: #fff;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+    #usersOnline h3 {
+      margin: 0;
+      margin-bottom: 10px;
+    }
+    #usersOnline ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    #usersOnline li {
+      margin: 5px 0;
+      padding: 5px;
+      background-color: #333;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -124,6 +147,7 @@
       <button id="loginButton">Login</button>
     </div>
   </div>
+
   <div id="chatApp">
     <div class="header">
       <h1>Chat App</h1>
@@ -133,6 +157,10 @@
     <div class="input-area">
       <input type="text" id="messageInput" placeholder="Type message...">
       <button id="sendBtn">Send</button>
+    </div>
+    <div id="usersOnline">
+      <h3>Users Online</h3>
+      <ul id="usersList"></ul>
     </div>
   </div>
 
@@ -152,6 +180,7 @@
     const messageArea = document.getElementById("messageArea");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    const usersList = document.getElementById("usersList");
 
     // Initialize Pusher
     const pusher = new Pusher(pusherKey, {
@@ -164,6 +193,11 @@
       displayMessage(data.username, data.message, "received");
     });
 
+    // Subscribe to 'user-status' channel to listen for online users
+    channel.bind('user-status', function(data) {
+      updateUsersOnline(data.users);
+    });
+
     // Login function
     function login() {
       const enteredUsername = loginUsernameInput.value.trim();
@@ -172,6 +206,12 @@
       usernameDisplay.textContent = "Logged in as: " + username;
       loginModal.style.display = "none";
       chatApp.style.display = "flex";
+      
+      // Send the new user status to Pusher (broadcast to others)
+      channel.trigger('client-user-status', { 
+        username: username,
+        status: 'online'
+      });
     }
 
     loginButton.addEventListener("click", login);
@@ -217,6 +257,16 @@
       messageDiv.textContent = `${user}: ${message}`;
       messageArea.appendChild(messageDiv);
       messageArea.scrollTop = messageArea.scrollHeight;
+    }
+
+    // Update the list of users online
+    function updateUsersOnline(users) {
+      usersList.innerHTML = '';
+      users.forEach(user => {
+        const userItem = document.createElement("li");
+        userItem.textContent = user;
+        usersList.appendChild(userItem);
+      });
     }
   </script>
 </body>
