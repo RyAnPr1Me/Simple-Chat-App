@@ -9,16 +9,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const sendBtn = document.getElementById("sendBtn");
 
     // Handle Login
-    loginButton.addEventListener("click", function() {
-        loginUser();
-    });
-
-    loginUsername.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            loginUser();
-        }
-    });
-
     function loginUser() {
         const username = loginUsername.value.trim();
         if (username) {
@@ -28,17 +18,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Handle Sending Messages
-    sendBtn.addEventListener("click", function() {
-        sendMessage();
-    });
-
-    messageInput.addEventListener("keypress", function(event) {
+    loginButton.addEventListener("click", loginUser);
+    loginUsername.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
-            sendMessage();
+            loginUser();
         }
     });
 
+    // Handle Sending Messages
     function sendMessage() {
         const messageText = messageInput.value.trim();
         if (messageText) {
@@ -50,5 +37,11 @@ document.addEventListener("DOMContentLoaded", function() {
             messageArea.scrollTop = messageArea.scrollHeight;
         }
     }
-});
 
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+});
