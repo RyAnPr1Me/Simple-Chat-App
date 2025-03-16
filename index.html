@@ -64,7 +64,7 @@
     }
     /* Chat App UI */
     #chatApp {
-      display: flex;
+      display: none;
       flex-direction: column;
       height: 100%;
     }
@@ -127,9 +127,6 @@
     .input-area button:hover {
       background-color: #357ae8;
     }
-    .hidden {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -143,7 +140,7 @@
   </div>
   
   <!-- Chat App -->
-  <div id="chatApp" class="hidden">
+  <div id="chatApp">
     <div class="header">
       <h1>Chat App</h1>
       <div id="usernameDisplay"></div>
@@ -189,8 +186,9 @@
       username = enteredUsername;
       encryptionKey = deriveKey(username);
       usernameDisplay.textContent = "Logged in as: " + username;
-      loginModal.classList.add("hidden");
-      chatApp.classList.remove("hidden");
+      // Hide the login modal and show the chat app
+      loginModal.style.display = "none";
+      chatApp.style.display = "flex";
       messageInput.focus();
     }
   
