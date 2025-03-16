@@ -6,17 +6,16 @@ from pusher.errors import PusherBadRequest, PusherServerError
 from socket import timeout
 from flask import Flask, request, jsonify
 from supabase import create_client, Client
-import os
-from dotenv import load_dotenv
-
-# --- Load environment variables ---
-load_dotenv()
 
 # --- Pusher Credentials ---
 pusher_app_id = "1958651"
 pusher_key = "df5bb9092afe8e53d9b4"
 pusher_secret = "7f144a3663d71df28611"
 pusher_cluster = "us2"
+
+# --- Supabase Credentials (Directly Included) ---
+SUPABASE_URL = "https://nemjfhfsgpnpyxyagwbx.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lbWpmaGZzZ3BucHl4eWFnd2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMDcyMTUsImV4cCI6MjA1NzU4MzIxNX0.cMKhnHj6mTILO9CHrQDVhOxtLDmhR-kudhzoP7U7k_w"
 
 # --- Initialize Pusher Client ---
 pusher_client = Pusher(
@@ -27,9 +26,7 @@ pusher_client = Pusher(
     ssl=True
 )
 
-# --- Supabase Credentials ---
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# --- Initialize Supabase Client ---
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- Setup logging ---
@@ -199,4 +196,3 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
-
