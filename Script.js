@@ -1,121 +1,63 @@
-let username = null;
-const loginModal = document.getElementById("loginModal");
-const loginUsernameInput = document.getElementById("loginUsername");
-const loginButton = document.getElementById("loginButton");
-const chatApp = document.getElementById("chatApp");
-const usernameDisplay = document.getElementById("usernameDisplay");
-const messageArea = document.getElementById("messageArea");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const userList = document.getElementById("userList");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Secure Chat App with real-time messaging and client-side encryption.">
+  <title>Chat App</title>
+  <!-- Google Fonts: Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Main CSS file -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Pusher for real-time messaging -->
+  <script src="https://js.pusher.com/8.2.0/pusher.min.js" defer></script>
+  <!-- CryptoJS for client-side encryption -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" defer></script>
+  <!-- Main JavaScript File -->
+  <script src="script.js" defer></script>
+  <!-- Favicon -->
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <h2>Welcome to Chat</h2>
+      <input type="text" id="loginUsername" placeholder="Enter your username" aria-label="Username">
+      <button id="loginButton">Login</button>
+    </div>
+  </div>
 
-// Initialize Pusher
-const pusher = new Pusher("df5bb9092afe8e53d9b4", {
-  cluster: "us2",
-  forceTLS: true,
-});
+  <!-- Main Chat Application -->
+  <div id="chatApp" class="chat-container">
+    <!-- Sidebar: Online Users -->
+    <aside class="sidebar">
+      <h3>Users Online</h3>
+      <ul id="userList"></ul>
+    </aside>
 
-const channel = pusher.subscribe("global-chat");
+    <!-- Chat Content -->
+    <div class="chat-box">
+      <header class="chat-header">
+        <h1>Chat App</h1>
+        <div id="usernameDisplay"></div>
+      </header>
 
-channel.bind("chat-message", (data) => {
-  const decryptedMessage = decryptMessage(data.message);
-  displayMessage(data.username, decryptedMessage, "received");
-});
+      <main id="messageArea" class="message-area">
+        <!-- Messages will be dynamically added here -->
+      </main>
 
-channel.bind("user-status", (data) => {
-  updateUsersOnline(data.users);
-});
+      <footer class="input-area">
+        <input type="text" id="messageInput" placeholder="Type your message..." aria-label="Message Input">
+        <button id="sendBtn">Send</button>
+      </footer>
+    </div>
+  </div>
 
-function login() {
-  const enteredUsername = loginUsernameInput.value.trim();
-  if (!enteredUsername) {
-    alert("Please enter a valid username!");
-    return;
-  }
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 Chat App. All rights reserved.</p>
+  </footer>
+</body>
+</html>
 
-  username = enteredUsername;
-  usernameDisplay.textContent = `Logged in as: ${username}`;
-  loginModal.style.display = "none";
-  chatApp.style.display = "flex";
-
-  notifyBackend("/update_user_status", { username }).catch((error) =>
-    console.error("Error updating user status:", error)
-  );
-}
-
-loginButton.addEventListener("click", login);
-loginUsernameInput.addEventListener("keyup", (event) => {
-  if (event.key === "Enter") login();
-});
-
-function sendMessage() {
-  const message = messageInput.value.trim();
-  if (!message) {
-    alert("Please enter a message!");
-    return;
-  }
-
-  displayMessage(username, message, "sent");
-
-  const encryptedMessage = encryptMessage(message);
-
-  notifyBackend("/send_message", { username, message: encryptedMessage })
-    .then((data) => console.log("Message sent:", data))
-    .catch((error) => console.error("Error sending message:", error));
-
-  messageInput.value = ""; // Clear input after sending
-}
-
-sendBtn.addEventListener("click", sendMessage);
-messageInput.addEventListener("keyup", (event) => {
-  if (event.key === "Enter") sendMessage();
-});
-
-function displayMessage(user, message, type) {
-  const div = document.createElement("div");
-  div.classList.add("message", type);
-  div.textContent = `${user}: ${message}`;
-  messageArea.appendChild(div);
-  messageArea.scrollTop = messageArea.scrollHeight;
-}
-
-function updateUsersOnline(users) {
-  userList.innerHTML = "";
-  users.forEach((user) => {
-    const li = document.createElement("li");
-    li.textContent = user;
-    userList.appendChild(li);
-  });
-}
-
-function encryptMessage(message) {
-  return CryptoJS.AES.encrypt(message, "secret-key").toString();
-}
-
-function decryptMessage(encryptedMessage) {
-  try {
-    const bytes = CryptoJS.AES.decrypt(encryptedMessage, "secret-key");
-    return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
-  } catch (error) {
-    console.error("Error decrypting message:", error);
-    return "[Error]";
-  }
-}
-
-function notifyBackend(endpoint, data) {
-  return fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  }).then((response) => response.json());
-}
-
-// Auto-reconnect when Pusher disconnects
-pusher.connection.bind("disconnected", () => {
-  console.warn("Pusher disconnected! Attempting to reconnect...");
-  setTimeout(() => {
-    location.reload();
-  }, 3000);
-});
