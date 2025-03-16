@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
     "start": "vercel dev --token rYUi3QHo2ZtCTliomb5OjYlq",
-    "build": "echo 'No build step needed' && exit 0",
+    "build": "mkdir -p public && cp index.html public/index.html && cp style.css public/style.css && cp script.js public/script.js && echo 'Build completed'",
     "deploy": "vercel deploy --token rYUi3QHo2ZtCTliomb5OjYlq"
   },
   "keywords": [
@@ -30,4 +30,3 @@
     "vercel": "^23.0.1"
   }
 }
-
